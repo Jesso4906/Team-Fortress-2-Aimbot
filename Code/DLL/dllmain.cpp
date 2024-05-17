@@ -336,7 +336,7 @@ AimAngles CalculateAimAngles(uintptr_t localPlayer, uintptr_t targetPlayer, bool
 	{
 		TF2Class playerClass = *(TF2Class*)(targetPlayer + 0x1BB0);
 		targetPos = GetBonePosition(boneCache, GetHeadBoneIndex(playerClass));
-		targetPos.z += 4;
+		targetPos.z += 3;
 	}
 	else
 	{
@@ -396,7 +396,7 @@ void PredictPosition(uintptr_t localPlayer, uintptr_t targetPlayer, Vector3& out
 	Vector3 localPlayerVelocity = (*(Vector3*)(localPlayer + 0x178));
 	Vector3 velocity = targetPlayerVelocity - localPlayerVelocity;
 
-	out.x += velocity.x / 60;
-	out.y += velocity.y / 60;
-	out.z += velocity.z / 60;
+	out.x += velocity.x / 50;
+	out.y += velocity.y / 50;
+	out.z += velocity.z / 50;
 }

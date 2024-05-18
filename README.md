@@ -7,11 +7,17 @@ I tried to avoid using too much of TF2's source code, so the only things copied 
 
 Key binds:
 Insert: exit
+
 Tab: reset settings
+
 Left Shift: aim bot
+
 B: toggle between head shots and body shots
-T: toggle between track and snap aiming
-H: auto shoot valid target
+
+T: auto shoot valid target
+
 R: toggle ray tracing
+
 0: aim for the closest enemy
+
 1-9: aim for specific class

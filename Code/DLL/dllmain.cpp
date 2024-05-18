@@ -270,8 +270,9 @@ uintptr_t GetClosestPlayer(void* engineTrace, bool rayTrace, bool aimForHead, ui
 			if (aimForHead)
 			{
 				TF2Class playerClass = *(TF2Class*)(player + 0x1BB0);
-				targetPos = GetBonePosition(boneCache, GetHeadBoneIndex(playerClass));
-				targetPos.z += headOffset;
+				HeadInfo headInfo = GetHeadInfo(playerClass);
+				targetPos = GetBonePosition(boneCache, headInfo.boneId);
+				targetPos.z += headInfo.heightOffset;
 			}
 			else
 			{
@@ -286,7 +287,7 @@ uintptr_t GetClosestPlayer(void* engineTrace, bool rayTrace, bool aimForHead, ui
 			ray.is_ray = true;
 
 			trace_t trace;
-			TraceRay(engineTrace, ray, CONTENTS_SOLID | CONTENTS_DEBRIS | CONTENTS_MOVEABLE | CONTENTS_HITBOX | CONTENTS_GRATE, nullptr, &trace);
+			TraceRay(engineTrace, ray, CONTENTS_SOLID | CONTENTS_DEBRIS | CONTENTS_MOVEABLE | CONTENTS_HITBOX | CONTENTS_WINDOW, nullptr, &trace);
 
 			if (trace.entity != (void*)player && trace.surface.flags != 1088) // 1088 seems to be invis wall at spawn
 			{
@@ -325,8 +326,9 @@ AimAngles CalculateAimAngles(uintptr_t localPlayer, uintptr_t targetPlayer, bool
 	if (aimForHead)
 	{
 		TF2Class playerClass = *(TF2Class*)(targetPlayer + 0x1BB0);
-		targetPos = GetBonePosition(boneCache, GetHeadBoneIndex(playerClass));
-		targetPos.z += headOffset;
+		HeadInfo headInfo = GetHeadInfo(playerClass);
+		targetPos = GetBonePosition(boneCache, headInfo.boneId);
+		targetPos.z += headInfo.heightOffset;
 	}
 	else
 	{
@@ -355,17 +357,43 @@ void* GetInterface(const char* modName, const char* interfaceName)
 	return CreateInterface(interfaceName, &returnCode);
 }
 
-int GetHeadBoneIndex(TF2Class playerClass) 
+HeadInfo GetHeadInfo(TF2Class playerClass)
 {
+	HeadInfo result = {};
+
 	switch (playerClass) 
 	{
+	case Soldier:
+		result.boneId = 6;
+		result.heightOffset = 6;
+		break;
+	case Pyro:
+		result.boneId = 6;
+		result.heightOffset = 3;
+		break;
 	case Demoman:
-		return 16;
+		result.boneId = 16;
+		result.heightOffset = 5;
+		break;
 	case Engineer:
-		return 8;
+		result.boneId = 8;
+		result.heightOffset = 6;
+		break;
+	case Sniper:
+		result.boneId = 6;
+		result.heightOffset = 5;
+		break;
+	case Spy:
+		result.boneId = 6;
+		result.heightOffset = 5;
+		break;
 	default:
-		return 6;
+		result.boneId = 6;
+		result.heightOffset = 4;
+		break;
 	}
+
+	return result;
 }
 
 Vector3 GetBonePosition(CBoneCache* pcache, int iBone)
@@ -386,7 +414,7 @@ void PredictPosition(uintptr_t localPlayer, uintptr_t targetPlayer, Vector3& out
 	Vector3 localPlayerVelocity = (*(Vector3*)(localPlayer + 0x178));
 	Vector3 velocity = targetPlayerVelocity - localPlayerVelocity;
 
-	out.x += velocity.x / 125;
-	out.y += velocity.y / 125;
-	out.z += velocity.z / 125;
+	out.x += velocity.x / 70;
+	out.y += velocity.y / 70;
+	out.z += velocity.z / 70;
 }

@@ -6,8 +6,6 @@
 
 const float radiansToDegrees = (180 / 3.14159);
 
-const float headOffset = 3;
-
 enum TF2Class
 {
 	Any = 0,
@@ -48,7 +46,12 @@ AimAngles CalculateAimAngles(uintptr_t localPlayer, uintptr_t targetPlayer, bool
 typedef void* (__cdecl* _CreateInterface)(const char* name, int* returnCode);
 void* GetInterface(const char* modName, const char* interfaceName);
 
-int GetHeadBoneIndex(TF2Class playerClass);
+struct HeadInfo 
+{
+	int boneId, heightOffset;
+};
+
+HeadInfo GetHeadInfo(TF2Class playerClass);
 
 Vector3 GetBonePosition(CBoneCache* pcache, int iBone);
 

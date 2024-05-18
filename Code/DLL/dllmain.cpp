@@ -296,9 +296,9 @@ uintptr_t GetClosestPlayer(void* engineTrace, bool rayTrace, bool aimForHead, ui
 			ray.is_ray = true;
 
 			trace_t trace;
-			TraceRay(engineTrace, ray, CONTENTS_SOLID | CONTENTS_MOVEABLE | CONTENTS_MONSTER | CONTENTS_WINDOW | CONTENTS_HITBOX, nullptr, &trace);
+			TraceRay(engineTrace, ray, CONTENTS_SOLID | CONTENTS_DEBRIS | CONTENTS_MOVEABLE | CONTENTS_HITBOX, nullptr, &trace);
 
-			if (trace.entity != (void*)player)
+			if (trace.entity != (void*)player && trace.surface.flags != 1088) // 1088 seems to be the invis wall at spawn
 			{
 				playerList += 0x20;
 				continue;

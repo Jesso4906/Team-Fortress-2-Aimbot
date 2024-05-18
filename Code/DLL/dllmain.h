@@ -1,12 +1,12 @@
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-
 #include <iostream>
 
+#include "memoryTools.h"
 #include "boneCache.h"
 #include "traceRay.h"
 
 const float radiansToDegrees = (180 / 3.14159);
+
+const float headOffset = 3;
 
 enum TF2Class
 {
@@ -23,6 +23,8 @@ enum TF2Class
 };
 
 void PrintControls();
+
+void SendLeftClick();
 
 typedef CBoneCache* (__thiscall* _GetBoneCache)(void* thisPtr, void* pStudioHdr);
 _GetBoneCache GetBoneCache;

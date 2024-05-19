@@ -16,10 +16,8 @@ Left Shift: aim bot
 
 B: toggle between head shots and body shots
 
+H: toggle between hold to aimbot and toggle
+
 T: auto shoot valid target
 
 R: toggle ray tracing
-
-0: aim for the closest enemy
-
-1-9: aim for specific class

@@ -18,6 +18,6 @@ B: toggle between head shots and body shots
 
 H: toggle between hold to aimbot and toggle
 
-T: auto shoot valid target
+T: auto lock on to valid target
 
 R: toggle ray tracing

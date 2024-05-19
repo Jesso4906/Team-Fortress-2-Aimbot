@@ -36,9 +36,8 @@ DWORD WINAPI Thread(LPVOID param)
 	INPUT input = {};
 	input.type = INPUT_MOUSE;
 
-	TF2Class targetClass = Any;
-
 	bool goForHeadShot = true;
+	bool toggleAimBot = true;
 	bool autoShoot = false;
 	bool traceRays = true;
 
@@ -50,19 +49,25 @@ DWORD WINAPI Thread(LPVOID param)
 		{
 			PrintControls();
 
-			targetClass = Any;
-
 			goForHeadShot = true;
 			autoShoot = false;
 			traceRays = true;
 		}
-		
+
 		if (GetAsyncKeyState(0x42) & 1) // B
-		{ 
-			goForHeadShot = !goForHeadShot; 
+		{
+			goForHeadShot = !goForHeadShot;
 
 			if (goForHeadShot) { std::cout << "Aiming for head shots\n"; }
 			else { std::cout << "Aiming for body shots\n"; }
+		}
+
+		if (GetAsyncKeyState(0x48) & 1) // H
+		{
+			toggleAimBot = !toggleAimBot;
+
+			if (toggleAimBot) { std::cout << "Toggle aim bot on\n"; }
+			else { std::cout << "Hold aim bot on\n"; }
 		}
 
 		if (GetAsyncKeyState(0x54) & 1) // T
@@ -80,59 +85,57 @@ DWORD WINAPI Thread(LPVOID param)
 			if (traceRays) { std::cout << "Ray tracing enabled\n"; }
 			else { std::cout << "Ray tracing disabled\n"; }
 		}
-		
-		if (GetAsyncKeyState(0x30) & 1) { targetClass = Any; std::cout << "Targetting closest enemy\n"; }
-		if (GetAsyncKeyState(0x31) & 1) { targetClass = Scout; std::cout << "Targetting closest scout\n"; }
-		if (GetAsyncKeyState(0x32) & 1) { targetClass = Soldier; std::cout << "Targetting closest soldier\n"; }
-		if (GetAsyncKeyState(0x33) & 1) { targetClass = Pyro; std::cout << "Targetting closest pyro\n"; }
-		if (GetAsyncKeyState(0x34) & 1) { targetClass = Demoman; std::cout << "Targetting closest demoman\n"; }
-		if (GetAsyncKeyState(0x35) & 1) { targetClass = Heavy; std::cout << "Targetting closest heavy\n"; }
-		if (GetAsyncKeyState(0x36) & 1) { targetClass = Engineer; std::cout << "Targetting closest engineer\n"; }
-		if (GetAsyncKeyState(0x37) & 1) { targetClass = Medic; std::cout << "Targetting closest medic\n"; }
-		if (GetAsyncKeyState(0x38) & 1) { targetClass = Sniper; std::cout << "Targetting closest sniper\n"; }
-		if (GetAsyncKeyState(0x39) & 1) { targetClass = Spy; std::cout << "Targetting closest spy\n"; }
 
-		if ((GetAsyncKeyState(0xA0) & 1)) // Left Shift
+		if ((GetAsyncKeyState(0xA0) & 1) || autoShoot) // Left Shift
 		{
 			uintptr_t localPlayer = GetLocalPlayer(clientDllBase);
 			if (!IsValidPlayer(localPlayer)) { continue; }
 
-			uintptr_t targetPlayer = GetClosestPlayer(engineTrace, traceRays, goForHeadShot, clientDllBase, localPlayer, targetClass);
+			uintptr_t targetPlayer = GetClosestPlayer(engineTrace, traceRays, goForHeadShot, clientDllBase, localPlayer);
 			if (!IsValidPlayer(targetPlayer)) { continue; }
 
 			// nopping these to prevent moving the view angles with the mouse
 			SetByte((void*)(engineDllBase + 0x70C02), 0x90, 8);
 			SetByte((void*)(engineDllBase + 0x70C14), 0x90, 8);
 
-			while (GetAsyncKeyState(0xA0)) { Sleep(1); } // clearing it
-
-			int health = *(int*)(targetPlayer + 0xE4);
-
-			int counter = 0;
-			while (!GetAsyncKeyState(0xA0) && health > 1) // Left Shift
+			if (toggleAimBot) 
 			{
-				AimAngles angles = CalculateAimAngles(localPlayer, targetPlayer, goForHeadShot);
+				while (GetAsyncKeyState(0xA0)) { Sleep(1); } // clearing it
 
-				if (!angles.valid) { break; }
-
-				// set pitch and yaw
-				*(float*)(engineDllBase + 0x53F354) = angles.pitch;
-				*(float*)(engineDllBase + 0x53F358) = angles.yaw;
-
-				if (autoShoot && counter > 2000)
+				int health = (*(int*)(targetPlayer + 0xE4));
+				while (!GetAsyncKeyState(0xA0) && health > 1)
 				{
-					SendLeftClick();
-					counter = 0;
+					AimAngles angles = CalculateAimAngles(localPlayer, targetPlayer, goForHeadShot);
+					if (!angles.valid) { break; }
+
+					// set pitch and yaw
+					*(float*)(engineDllBase + 0x53F354) = angles.pitch;
+					*(float*)(engineDllBase + 0x53F358) = angles.yaw;
+
+					if (autoShoot) { SendLeftClick(); }
+
+					health = (*(int*)(targetPlayer + 0xE4));
 				}
-				counter++;
-
-				health = *(int*)(targetPlayer + 0xE4);
 			}
+			else 
+			{
+				while (GetAsyncKeyState(0xA0))
+				{
+					AimAngles angles = CalculateAimAngles(localPlayer, targetPlayer, goForHeadShot);
+					if (!angles.valid) { break; }
 
+					// set pitch and yaw
+					*(float*)(engineDllBase + 0x53F354) = angles.pitch;
+					*(float*)(engineDllBase + 0x53F358) = angles.yaw;
+
+					if (autoShoot) { SendLeftClick(); }
+				}
+			}
+			
 			// undo the nop
 			SetBytes((void*)(engineDllBase + 0x70C02), (BYTE*)"\xF3\x0F\x11\x05\x4A\xE7\x4C\x00", 8);
 			SetBytes((void*)(engineDllBase + 0x70C14), (BYTE*)"\xF3\x0F\x11\x05\x3C\xE7\x4C\x00", 8);
-		} 
+		}
 	}
 
 	fclose(f);
@@ -159,10 +162,9 @@ void PrintControls()
 	std::cout << "Tab: reset settings\n";
 	std::cout << "Left Shift: aim bot\n";
 	std::cout << "B: toggle between head shots and body shots\n";
+	std::cout << "H: toggle between hold to aimbot and toggle\n";
 	std::cout << "T: auto shoot valid target\n";
 	std::cout << "R: toggle ray tracing\n";
-	std::cout << "0: aim for the closest enemy\n";
-	std::cout << "1-9: aim for specific class\n\n";
 }
 
 void SendLeftClick() 
@@ -219,7 +221,7 @@ uintptr_t GetLocalPlayer(uintptr_t clientDllBase)
 	return 0;
 }
 
-uintptr_t GetClosestPlayer(void* engineTrace, bool rayTrace, bool aimForHead, uintptr_t clientDllBase, uintptr_t localPlayer, TF2Class targetClass)
+uintptr_t GetClosestPlayer(void* engineTrace, bool rayTrace, bool aimForHead, uintptr_t clientDllBase, uintptr_t localPlayer)
 {
 	uintptr_t playerList = (clientDllBase + 0x106CC18);
 
@@ -244,9 +246,8 @@ uintptr_t GetClosestPlayer(void* engineTrace, bool rayTrace, bool aimForHead, ui
 
 		int health = *(int*)(player + 0xE4);
 		int team = *(int*)(player + 0xEC);
-		TF2Class playerClass = *(TF2Class*)(player + 0x1BB0);
 
-		if (player == localPlayer || health < 2 || localPlayerTeam == team || (targetClass != Any && playerClass != targetClass)) // player found, but shouldn't be targeted
+		if (player == localPlayer || health < 2 || localPlayerTeam == team) // player found, but shouldn't be targeted
 		{ 
 			playerList += 0x20;
 			continue; 
@@ -289,7 +290,7 @@ uintptr_t GetClosestPlayer(void* engineTrace, bool rayTrace, bool aimForHead, ui
 			trace_t trace;
 			TraceRay(engineTrace, ray, CONTENTS_SOLID | CONTENTS_DEBRIS | CONTENTS_MOVEABLE | CONTENTS_HITBOX | CONTENTS_WINDOW, nullptr, &trace);
 
-			if (trace.entity != (void*)player && trace.surface.flags != 1088) // 1088 seems to be invis wall at spawn
+			if (trace.entity != (void*)player && !(trace.surface.flags & SURF_TRIGGER)) // if it is a spawn invis wall then still allow shooting
 			{
 				playerList += 0x20;
 				continue;
@@ -365,11 +366,11 @@ HeadInfo GetHeadInfo(TF2Class playerClass)
 	{
 	case Soldier:
 		result.boneId = 6;
-		result.heightOffset = 6;
+		result.heightOffset = 4;
 		break;
 	case Pyro:
 		result.boneId = 6;
-		result.heightOffset = 3;
+		result.heightOffset = 2;
 		break;
 	case Demoman:
 		result.boneId = 16;
@@ -414,7 +415,7 @@ void PredictPosition(uintptr_t localPlayer, uintptr_t targetPlayer, Vector3& out
 	Vector3 localPlayerVelocity = (*(Vector3*)(localPlayer + 0x178));
 	Vector3 velocity = targetPlayerVelocity - localPlayerVelocity;
 
-	out.x += velocity.x / 70;
-	out.y += velocity.y / 70;
-	out.z += velocity.z / 70;
+	out.x += velocity.x / 60;
+	out.y += velocity.y / 60;
+	out.z += velocity.z / 60;
 }

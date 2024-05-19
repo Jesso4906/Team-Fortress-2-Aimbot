@@ -33,7 +33,7 @@ _TraceRay TraceRay;
 bool IsValidPlayer(uintptr_t player);
 
 uintptr_t GetLocalPlayer(uintptr_t clientDllBase);
-uintptr_t GetClosestPlayer(void* engineTrace, bool rayTrace, bool aimForHead, uintptr_t clientDllBase, uintptr_t localPlayer, TF2Class targetClass);
+uintptr_t GetClosestPlayer(void* engineTrace, bool rayTrace, bool aimForHead, uintptr_t clientDllBase, uintptr_t localPlayer);
 
 struct AimAngles
 {

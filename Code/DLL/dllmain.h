@@ -22,8 +22,6 @@ enum TF2Class
 
 void PrintControls();
 
-void SendLeftClick();
-
 typedef CBoneCache* (__thiscall* _GetBoneCache)(void* thisPtr, void* pStudioHdr);
 _GetBoneCache GetBoneCache;
 

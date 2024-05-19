@@ -38,7 +38,7 @@ DWORD WINAPI Thread(LPVOID param)
 
 	bool goForHeadShot = true;
 	bool toggleAimBot = true;
-	bool autoShoot = false;
+	bool autoLock = false;
 	bool traceRays = true;
 
 	void* engineTrace = (void*)GetInterface("engine.dll", "EngineTraceClient003");
@@ -50,7 +50,7 @@ DWORD WINAPI Thread(LPVOID param)
 			PrintControls();
 
 			goForHeadShot = true;
-			autoShoot = false;
+			autoLock = false;
 			traceRays = true;
 		}
 
@@ -72,10 +72,10 @@ DWORD WINAPI Thread(LPVOID param)
 
 		if (GetAsyncKeyState(0x54) & 1) // T
 		{
-			autoShoot = !autoShoot;
+			autoLock = !autoLock;
 
-			if (autoShoot) { std::cout << "Auto shoot enabled\n"; }
-			else { std::cout << "Auto shoot disabled\n"; }
+			if (autoLock) { std::cout << "Auto lock on enabled\n"; }
+			else { std::cout << "Auto lock on disabled\n"; }
 		}
 
 		if (GetAsyncKeyState(0x52) & 1) // R
@@ -86,7 +86,7 @@ DWORD WINAPI Thread(LPVOID param)
 			else { std::cout << "Ray tracing disabled\n"; }
 		}
 
-		if ((GetAsyncKeyState(0xA0) & 1) || autoShoot) // Left Shift
+		if ((GetAsyncKeyState(0xA0) & 1) || autoLock) // Left Shift
 		{
 			uintptr_t localPlayer = GetLocalPlayer(clientDllBase);
 			if (!IsValidPlayer(localPlayer)) { continue; }
@@ -112,8 +112,6 @@ DWORD WINAPI Thread(LPVOID param)
 					*(float*)(engineDllBase + 0x53F354) = angles.pitch;
 					*(float*)(engineDllBase + 0x53F358) = angles.yaw;
 
-					if (autoShoot) { SendLeftClick(); }
-
 					health = (*(int*)(targetPlayer + 0xE4));
 				}
 			}
@@ -127,8 +125,6 @@ DWORD WINAPI Thread(LPVOID param)
 					// set pitch and yaw
 					*(float*)(engineDllBase + 0x53F354) = angles.pitch;
 					*(float*)(engineDllBase + 0x53F358) = angles.yaw;
-
-					if (autoShoot) { SendLeftClick(); }
 				}
 			}
 			
@@ -163,26 +159,8 @@ void PrintControls()
 	std::cout << "Left Shift: aim bot\n";
 	std::cout << "B: toggle between head shots and body shots\n";
 	std::cout << "H: toggle between hold to aimbot and toggle\n";
-	std::cout << "T: auto shoot valid target\n";
+	std::cout << "T: auto lock on to closest target\n";
 	std::cout << "R: toggle ray tracing\n";
-}
-
-void SendLeftClick() 
-{
-	MOUSEINPUT mouseInput;
-	mouseInput.dwFlags = MOUSEEVENTF_LEFTDOWN;
-
-	INPUT input;
-	input.type = INPUT_MOUSE;
-	input.mi = mouseInput;
-
-	SendInput(1, &input, sizeof(INPUT)); // left click
-
-	mouseInput.dwFlags = MOUSEEVENTF_LEFTUP;
-	input.mi = mouseInput;
-
-	SendInput(1, &input, sizeof(INPUT)); // stop left clicking
-	Sleep(750);
 }
 
 bool IsValidPlayer(uintptr_t player)
@@ -366,15 +344,15 @@ HeadInfo GetHeadInfo(TF2Class playerClass)
 	{
 	case Soldier:
 		result.boneId = 6;
-		result.heightOffset = 4;
+		result.heightOffset = 2;
 		break;
 	case Pyro:
 		result.boneId = 6;
-		result.heightOffset = 2;
+		result.heightOffset = 3;
 		break;
 	case Demoman:
 		result.boneId = 16;
-		result.heightOffset = 5;
+		result.heightOffset = 6;
 		break;
 	case Engineer:
 		result.boneId = 8;
